@@ -1,18 +1,122 @@
-# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
-language: "en-US"
-early_access: false
+language: en-US
+tone_instructions: "Deliver rigorous code reviews focused on engineering principles and best practices. Be firm but professional. Never compromise on quality. Prioritize maintainability, readability and clean architecture."
+
 reviews:
-  profile: "assertive"
-  request_changes_workflow: true
+  profile: assertive
   high_level_summary: true
-  poem: true
   review_status: true
-  collapse_walkthrough: false
+  commit_status: true
   auto_review:
     enabled: true
+    auto_incremental_review: true
     drafts: false
+  path_filters:
+    - "**/*.{kt,java,ts,tsx,js,jsx}"
+    - "!**/test/**"
+    - "!**/dist/**"
   path_instructions:
     - path: "**/*.kt"
-      instructions: "Analyze the Kotlin file to ensure adherence to clean code principles, including maintaining meaningful and descriptive names for variables, classes, and functions; keeping functions small and focused on a single responsibility; avoiding unnecessary comments by writing self-explanatory code; ensuring proper formatting with consistent indentation and spacing; limiting the use of global variables and ensuring proper encapsulation; avoiding code duplication by applying the DRY (Don't Repeat Yourself) principle; adhering to the Single Responsibility Principle (SRP) and other SOLID design principles; ensuring the code is declarative in nature, favoring high-level expressions and operators for clarity and conciseness; handling errors gracefully using clear, specific exceptions or functional constructs like Either; consistently looking out for and mitigating any leakage of sensitive data within the service layer; ensuring consistent use of null safety and type declarations; and writing testable code by keeping dependencies modular and minimizing side effects. Should never return plain text for errors instead of proper error objects. "
+      instructions: |
+        - Strictly enforce SOLID principles:
+          * Single Responsibility: Each class should have only one reason to change
+          * Open-Closed: Open for extension but closed for modification
+          * Liskov Substitution: Subtypes must be substitutable for their base types
+          * Interface Segregation: Clients shouldn't depend on interfaces they don't use
+          * Dependency Inversion: Depend on abstractions, not concretions
+        - Enforce Clean Architecture principles:
+          * Clear separation of concerns between layers
+          * Dependencies point inward
+          * Domain entities at the center
+          * Use cases independent of frameworks
+        - Check for proper Kotlin idioms and best practices:
+          * Smart casts and null safety
+          * Extension functions
+          * Data classes
+          * Sealed classes for type safety
+          * Property delegation
+        - Identify and flag any DRY violations and code duplication
+        - Ensure proper null safety handling with clear null contracts
+        - Verify coroutines best practices:
+          * Structured concurrency
+          * Proper scope management
+          * Error handling
+          * Cancellation handling
+        - Review code complexity:
+          * Cyclomatic complexity
+          * Cognitive complexity
+          * Method length
+          * Class size
+        - Enforce consistent code style:
+          * Meaningful naming
+          * Function size (max 20 lines recommended)
+          * Clear documentation
+          * Proper spacing and formatting
+        - Check error handling:
+          * Proper exception hierarchies
+          * Meaningful error messages
+          * Recovery strategies
+        - Verify unit test coverage and quality:
+          * Given-When-Then pattern
+          * Edge cases covered
+          * Proper mocking
+        - Look for design patterns application:
+          * Creational patterns (Factory, Builder, etc.)
+          * Structural patterns (Adapter, Decorator, etc.)
+          * Behavioral patterns (Strategy, Observer, etc.)
+    - path: "**/*.{ts,tsx}"
+      instructions: |
+        - Enforce SOLID principles in React components
+        - Verify effective TypeScript usage:
+          * Proper type definitions
+          * Generics where appropriate
+          * Discriminated unions
+          * Type guards
+        - Check React hooks usage:
+          * Dependencies array correctness
+          * Custom hooks follow conventions
+          * Proper cleanup in useEffect
+        - Identify component reusability opportunities
+        - Flag DRY violations in component logic
+        - Ensure proper state management:
+          * Local vs global state
+          * Immutability
+          * State colocation
+        - Review component complexity:
+          * Break down large components
+          * Extract reusable logic
+          * Proper prop drilling solutions
+        - Verify error boundaries and handling
+        - Check accessibility standards (WCAG)
+        - Enforce consistent code style and documentation
+    - path: "**/*.{js,jsx}"
+      instructions: |
+        - Enforce clean code principles:
+          * Meaningful names
+          * Small functions
+          * Clear abstractions
+        - Check component structure:
+          * Proper separation of concerns
+          * Container/Presenter pattern
+          * Props interface design
+        - Identify code duplication and DRY violations
+        - Review code complexity and cognitive load
+        - Ensure proper error handling and logging
+        - Verify consistent code formatting
+        - Check performance optimizations:
+          * Memoization usage
+          * Render optimization
+          * Bundle size impact
+
+  tools:
+    detekt:
+      enabled: true
+    eslint:
+      enabled: true
+
+knowledge_base:
+  issues:
+    scope: local
+  pull_requests:
+    scope: local
 chat:
   auto_reply: true
