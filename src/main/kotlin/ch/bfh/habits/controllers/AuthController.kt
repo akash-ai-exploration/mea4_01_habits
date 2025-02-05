@@ -32,6 +32,7 @@ class AuthController {
 
     @PostMapping("api/register")
     fun register(@RequestBody body: RegisterDTO?): ResponseEntity<User?> {
+        println("Received registration request for user: ${body?.userName}")
         val user = UserEntityBuilder.createUserEntityFromDTO(body!!)
         val savedUser = userService.save(user)
         println("User registered: ${savedUser.userName}")
@@ -67,5 +68,17 @@ class AuthController {
         val user = userService.findByUserName(userName)
         println("Fetched user details: $user")
         return ResponseEntity.ok(user)
+    }
+
+    @DeleteMapping("api/user/{userName}")
+    fun deleteUser(@PathVariable userName: String): ResponseEntity<Any?> {
+        return try {
+            userService.deleteByUserName(userName)
+            println("User deleted: $userName")
+            ResponseEntity.status(200).body("User deleted successfully")
+        } catch (e: Exception) {
+            println("Error deleting user: ${e.message}")
+            ResponseEntity.status(500).body("Error deleting user")
+        }
     }
 }
