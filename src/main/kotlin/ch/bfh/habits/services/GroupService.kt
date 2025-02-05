@@ -18,12 +18,6 @@ class GroupService(private val groupDAO: GroupDAO) {
     }
 
     @Transactional
-    fun newGroup(groupDTO: GroupDTO, userId: Long): Group {
-        val newGroup = GroupEntityBuilder.createGroupEntityFromDTO(groupDTO, userId)
-        return groupDAO.save(newGroup)
-    }
-
-    @Transactional
     fun getGroup(id: Long, userId: Long): Group {
         return groupDAO.findByUserIdAndId(userId, id) ?: throw EntityNotFoundException("Group not found or not owned by user")
     }
@@ -31,6 +25,12 @@ class GroupService(private val groupDAO: GroupDAO) {
     @Transactional
     fun deleteGroup(id: Long, userId: Long) {
         return groupDAO.delete(getGroup(id, userId))
+    }
+
+    @Transactional
+    fun newGroup(groupDTO: GroupDTO, userId: Long): Group {
+        val newGroup = GroupEntityBuilder.createGroupEntityFromDTO(groupDTO, userId)
+        return groupDAO.save(newGroup)
     }
 
     @Transactional

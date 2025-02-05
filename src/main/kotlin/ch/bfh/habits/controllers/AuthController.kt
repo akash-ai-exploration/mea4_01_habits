@@ -19,34 +19,66 @@ import java.util.*
 import javax.servlet.http.HttpServletResponse
 
 @RestController
-class AuthController @Autowired constructor(
-        private val authenticationManager: AuthenticationManager,
-        private val tokenProvider: TokenProvider,
-        private val userService: UserService,
-    ) {
+class AuthController {
+
+    @Autowired
+    lateinit var authenticationManager: AuthenticationManager
+
+    @Autowired
+    lateinit var tokenProvider: TokenProvider
+
+    @Autowired
+    lateinit var userService: UserService
+
     @PostMapping("api/register")
-    fun register(@RequestBody body: RegisterDTO): ResponseEntity<User> {
-        val user = UserEntityBuilder.createUserEntityFromDTO(body)
-        return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.save(user))
+    fun register(@RequestBody body: RegisterDTO?): ResponseEntity<User?> {
+        println("Received registration request for user: ${body?.userName}")
+        val user = UserEntityBuilder.createUserEntityFromDTO(body!!)
+        val savedUser = userService.save(user)
+        println("User registered: ${savedUser.userName}")
+        return ResponseEntity.status(200).body(savedUser)
     }
 
     @PostMapping("api/login")
-    fun login(@RequestBody body: LoginDTO): ResponseEntity<JwtTokenDTO> {
-         try {
-             authenticationManager.authenticate(UsernamePasswordAuthenticationToken(body.userName, body.password))
-         } catch (e: AuthenticationException) {
-             throw UnauthorizedException("Invalid username/password supplied")
-         }
+    fun login(@RequestBody body: LoginDTO?): ResponseEntity<Any?> {
+        try {
+            authenticationManager.authenticate(
+                UsernamePasswordAuthenticationToken(body?.userName, body?.password)
+            )
+        } catch (e: Exception) {
+            println("Error during login: ${e.message}")
+            return ResponseEntity.status(401).body("Login failed")
+        }
 
-        val userDetails = userService.loadUserByUsername(body.userName)
-        val jwt = tokenProvider.generateToken(userDetails, this.userService.findByUserName(body.userName)!!)
+        val userDetails = userService.loadUserByUsername(body!!.userName)
+        val user = userService.findByUserName(body.userName)
+        val jwt = tokenProvider.generateToken(userDetails, user!!)
 
-        return ResponseEntity.ok(JwtTokenDTO(jwt))
+        println("Token generated for user: ${user.userName}")
+        return ResponseEntity.ok(jwt)
     }
 
     @GetMapping("api/user")
-    fun user(@RequestHeader(value = "Authorization") token: String): ResponseEntity<User?> {
+    fun user(@RequestHeader(value = "Authorization") token: String?): ResponseEntity<Any?> {
+        if (token == null) return ResponseEntity.status(400).body("Missing token")
+
         val userName = tokenProvider.extractUsername(token)
-        return ResponseEntity.ok(this.userService.findByUserName(userName))
+        if (userName.isNullOrEmpty()) return ResponseEntity.status(401).body("Invalid token")
+
+        val user = userService.findByUserName(userName)
+        println("Fetched user details: $user")
+        return ResponseEntity.ok(user)
+    }
+
+    @DeleteMapping("api/user/{userName}")
+    fun deleteUser(@PathVariable userName: String): ResponseEntity<Any?> {
+        return try {
+            userService.deleteByUserName(userName)
+            println("User deleted: $userName")
+            ResponseEntity.status(200).body("User deleted successfully")
+        } catch (e: Exception) {
+            println("Error deleting user: ${e.message}")
+            ResponseEntity.status(500).body("Error deleting user")
+        }
     }
 }
