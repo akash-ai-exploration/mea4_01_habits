@@ -10,6 +10,7 @@ import { useLoadingContext } from '../../context/loadingContext'
 import { classNames } from '../../lib/design'
 import { parseStringLength } from '../../lib/parse'
 import { useRouter } from 'next/router'
+import { ConfirmationDialog } from '../general/modals/ConfirmationDialog'
 
 export interface HabitCardProps {
   habit: Habit
@@ -19,6 +20,7 @@ export interface HabitCardProps {
 
 export const HabitCard = (props: HabitCardProps) => {
   const editModalRef = useRef<any>(null)
+  const confirmModalRef = useRef<any>(null)
   const { reload, setReload }: any = useLoadingContext()
   const router = useRouter()
 
@@ -27,8 +29,12 @@ export const HabitCard = (props: HabitCardProps) => {
   }
 
   const handleAddJournalEntry = (habitId: number) => {
+    confirmModalRef.current.open()
+  }
+
+  const confirmAddJournalEntry = () => {
     const body = {
-      habitId,
+      habitId: props.habit.id,
     }
     Api.post('/journal_entry', body)
       .then(() => {
@@ -89,6 +95,13 @@ export const HabitCard = (props: HabitCardProps) => {
       <PopUpModal ref={editModalRef}>
         <HabitForm modalRef={editModalRef} type="edit" habit={props.habit} />
       </PopUpModal>
+      <ConfirmationDialog 
+        ref={confirmModalRef}
+        title="Log Habit"
+        message={`Are you sure you want to log progress for "${props.habit.title}"?`}
+        confirmText="Log Progress"
+        onConfirm={confirmAddJournalEntry}
+      />
       <div className="flex h-full">
         <div
           className="w-24 flex items-center justify-center p-3"
